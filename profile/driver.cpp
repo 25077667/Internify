@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     if (argc != 2)
     {
         std::cerr << "Usage: " << argv[0] << " <input_data_file>" << std::endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
     // Instantiate the Internify library
@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     // Optionally, print the size of the interned map
     std::cout << "Final size of interned map: " << internify.size() << std::endl;
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 // Function to parse a line of input
@@ -53,18 +53,23 @@ bool parseInputLine(const std::string &line, std::string &base_string, char &tim
 // Function to process intern/release operations based on the multiplier
 void processInternifyOperations(scc::Internify<std::string> &internify, const std::string &base_string, int multiplier)
 {
+    std::vector<scc::Internify<std::string>::InternedPtr> internedStrings;
+
     if (multiplier > 0)
     {
         for (int i = 0; i < multiplier; ++i)
         {
-            internify.internify(base_string);
+            // We must store the return value to ensure proper management
+            internedStrings.push_back(internify.internify(base_string));
         }
     }
     else if (multiplier < 0)
     {
         for (int i = 0; i < -multiplier; ++i)
         {
-            internify.release(base_string);
+            // We must find and store the InternedPtr before erasing
+            auto internedPtr = internify.find(base_string);
+            internify.erase(base_string); // Assuming erase method is used here to remove the item
         }
     }
 }

@@ -28,22 +28,16 @@ There’s no need for additional setup or dependencies—just drop the header fi
 Here’s a simple example of how to use the `Internify` class, demonstrated through Google Test unit tests:
 
 ```cpp
-#include <gtest/gtest.h>
-#include <internify.hpp>
-
-#include <thread>
-#include <vector>
-
 TEST(InternifyTest, BasicUsage)
 {
     scc::Internify<std::string> intern;
 
-    auto str1 = intern.internify("hello");
+    auto str1 = intern.internify("hello");  // return type is InternedPtr<std::string, std::hash<std::string>>
     auto str2 = intern.internify("hello");
     auto str3 = intern.internify("world");
 
-    EXPECT_EQ(str1, str2);
-    EXPECT_NE(str1, str3);
+    EXPECT_EQ(str1.get(), str2.get()); // InternedPtr should point to the same instance
+    EXPECT_NE(str1.get(), str3.get()); // InternedPtr should point to different instances
     EXPECT_EQ(*str1, "hello");
     EXPECT_EQ(*str3, "world");
 }
@@ -52,15 +46,14 @@ TEST(InternifyTest, NoResourceLeakage)
 {
     scc::Internify<std::string> intern;
 
-    auto str1 = intern.internify("leaktest");
-    auto str2 = intern.internify("leaktest");
+    {
+        auto str1 = intern.internify("leaktest");
+        auto str2 = intern.internify("leaktest");
 
-    EXPECT_EQ(intern.size(), 1);
+        EXPECT_EQ(intern.size(), 1);
+    } // str1 and str2 go out of scope here
 
-    intern.release("leaktest");
-    intern.release("leaktest");
-
-    EXPECT_EQ(intern.size(), 0);
+    EXPECT_EQ(intern.size(), 0); // InterningNode should be released automatically
 }
 
 // Additional tests omitted for brevity...

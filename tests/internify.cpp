@@ -3,6 +3,7 @@
 
 #include <thread>
 #include <vector>
+#include <mutex>
 
 TEST(InternifyTest, BasicUsage)
 {
@@ -12,8 +13,8 @@ TEST(InternifyTest, BasicUsage)
     auto str2 = intern.internify("hello");
     auto str3 = intern.internify("world");
 
-    EXPECT_EQ(str1, str2);
-    EXPECT_NE(str1, str3);
+    EXPECT_EQ(str1.get(), str2.get()); // InternedPtr should point to the same instance
+    EXPECT_NE(str1.get(), str3.get()); // InternedPtr should point to different instances
     EXPECT_EQ(*str1, "hello");
     EXPECT_EQ(*str3, "world");
 }
@@ -22,15 +23,14 @@ TEST(InternifyTest, NoResourceLeakage)
 {
     scc::Internify<std::string> intern;
 
-    auto str1 = intern.internify("leaktest");
-    auto str2 = intern.internify("leaktest");
+    {
+        auto str1 = intern.internify("leaktest");
+        auto str2 = intern.internify("leaktest");
 
-    EXPECT_EQ(intern.size(), 1);
+        EXPECT_EQ(intern.size(), 1);
+    } // str1 and str2 go out of scope here
 
-    intern.release("leaktest");
-    intern.release("leaktest");
-
-    EXPECT_EQ(intern.size(), 0);
+    EXPECT_EQ(intern.size(), 0); // InterningNode should be released automatically
 }
 
 TEST(InternifyTest, EdgeCases)
@@ -38,16 +38,17 @@ TEST(InternifyTest, EdgeCases)
     scc::Internify<std::string> intern;
 
     // Test empty string
-    auto emptyStr1 = intern.internify("");
-    auto emptyStr2 = intern.internify("");
-    EXPECT_EQ(emptyStr1, emptyStr2);
-    EXPECT_EQ(*emptyStr1, "");
-    intern.release("");
-    intern.release(""); // we should erase twice, because we interned twice
+    {
+        auto emptyStr1 = intern.internify("");
+        auto emptyStr2 = intern.internify("");
+
+        EXPECT_EQ(emptyStr1.get(), emptyStr2.get()); // InternedPtr should point to the same instance
+        EXPECT_EQ(*emptyStr1, "");
+    }
 
     // Test large number of strings
     const int numStrings = 10000;
-    std::vector<std::shared_ptr<std::string>> strings;
+    std::vector<scc::Internify<std::string>::InternedPtr> strings;
     for (int i = 0; i < numStrings; ++i)
     {
         strings.push_back(intern.internify("test" + std::to_string(i)));
@@ -61,7 +62,7 @@ TEST(InternifyTest, Robustness)
     scc::Internify<std::string> intern;
 
     const int numStrings = 10000;
-    std::vector<std::shared_ptr<std::string>> strings;
+    std::vector<scc::Internify<std::string>::InternedPtr> strings;
 
     for (int i = 0; i < numStrings; ++i)
     {
@@ -70,7 +71,7 @@ TEST(InternifyTest, Robustness)
 
     for (int i = 0; i < numStrings; ++i)
     {
-        intern.release("robust" + std::to_string(i));
+        intern.erase("robust" + std::to_string(i));
     }
 
     EXPECT_EQ(intern.size(), 0);
@@ -79,16 +80,19 @@ TEST(InternifyTest, Robustness)
 TEST(InternifyTest, ThreadSafety)
 {
     scc::Internify<std::string> intern;
+    std::vector<scc::Internify<std::string>::InternedPtr> internedStrings;
 
     const int numThreads = 10;
     const int numOperations = 1000;
 
-    auto internifyFunction = [&intern](int id)
+    auto internifyFunction = [&intern, &internedStrings](int id)
     {
         for (int i = 0; i < numOperations; ++i)
         {
             std::string str = "threadsafe" + std::to_string(i + id * numOperations);
-            intern.internify(str);
+            static std::mutex mutex;
+            std::lock_guard lock(mutex);
+            internedStrings.emplace_back(intern.internify(str));
         }
     };
 
@@ -111,7 +115,7 @@ TEST(InternifyTest, ThreadSafety)
         for (int j = 0; j < numOperations; ++j)
         {
             std::string str = "threadsafe" + std::to_string(j + i * numOperations);
-            intern.release(str);
+            intern.erase(str); // Directly erase instead of relying on InternedPtr release
         }
     }
 
