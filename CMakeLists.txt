@@ -86,6 +86,9 @@ function(BuildTests)
         target_link_libraries(t_${name} GTest::gtest_main)
         gtest_discover_tests(t_${name})
     endforeach()
+
+    # Add profiling sources
+    add_subdirectory(profile)
 endfunction(BuildTests)
 
 BuildTests()

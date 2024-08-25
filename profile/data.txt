@@ -1,0 +1,17 @@
+"apple" * 10000000
+"banana" * 5000000
+"cherry" * 2500000
+"apple" * -5000000
+"banana" * -2500000
+"date" * 7500000
+"apple" * -5000000
+"banana" * -2500000
+"cherry" * -2500000
+"date" * -7500000
+"elderberry" * 10000000
+"elderberry" * -10000000
+"fig" * 1000000
+"grape" * 0
+"apple" * 1000000
+"apple" * -1000000
+"fig" * -1000000
