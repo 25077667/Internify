@@ -103,7 +103,7 @@ namespace scc
             std::unique_lock lock(m_mutex);
             auto hashed = hashValue(value);
             auto [it, inserted] = m_interningMap.try_emplace(hashed,
-                                                             std::make_shared<InterningNode<T>>(value));
+                                                             std::make_unique<InterningNode<T>>(value));
             if (inserted)
             {
                 return it->second->value;
@@ -115,7 +115,7 @@ namespace scc
             }
         }
 
-        std::unordered_map<HashedValue, std::shared_ptr<InterningNode<T>>> m_interningMap;
+        std::unordered_map<HashedValue, std::unique_ptr<InterningNode<T>>> m_interningMap;
         mutable std::shared_mutex m_mutex;
     };
 }
