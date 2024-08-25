@@ -4,6 +4,12 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <string>
+#include <chrono>
+#include <vector>
+#include <numeric>
+#include <cmath>
+#include <algorithm>
 
 TEST(InternifyTest, BasicUsage)
 {
@@ -120,4 +126,49 @@ TEST(InternifyTest, ThreadSafety)
     }
 
     EXPECT_EQ(intern.size(), 0);
+}
+
+// performance test, test for time consuming, 1 million strings should be interned in less than 1 second
+TEST(InternifyTest, Performance)
+{
+    scc::Internify<std::string> intern;
+    std::vector<scc::Internify<std::string>::InternedPtr> internedStrings;
+    constexpr auto numStrings = 1'000'000;
+
+    internedStrings.reserve(numStrings);
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < numStrings; ++i)
+    {
+        internedStrings.emplace_back(intern.internify("perf" + std::to_string(i)));
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> elapsed = end - start;
+    EXPECT_LT(elapsed.count(), 1.0); // Interning 1 million strings should take less than 1 second
+}
+
+TEST(InternifyTest, SimplifiedInternifyComplexity)
+{
+    scc::Internify<std::string> intern;
+
+    auto measure_internify_time = [&](int numOps)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int i = 0; i < numOps; ++i)
+        {
+            auto _ = intern.internify("perf" + std::to_string(i));
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        return elapsed.count();
+    };
+
+    // Measure times for different scales
+    double timeFor1000 = measure_internify_time(1000);
+    double timeFor10000 = measure_internify_time(10000);
+    double timeFor100000 = measure_internify_time(100000);
+
+    // If internify is O(1), the time should scale linearly
+    EXPECT_NEAR(timeFor1000 * 10, timeFor10000, timeFor10000 * 0.2);
+    EXPECT_NEAR(timeFor1000 * 100, timeFor100000, timeFor100000 * 0.2);
 }
