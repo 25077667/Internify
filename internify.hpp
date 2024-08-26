@@ -50,7 +50,8 @@ namespace scc
             const T &operator*() const { return *m_ptr; }
             const T *operator->() const { return m_ptr; }
 
-            operator bool() const { return m_ptr != nullptr; }
+            operator bool() const { return m_ptr != nullptr && m_owner != nullptr; }
+            bool is_valid() const { return m_ptr != nullptr && m_owner != nullptr; }
 
             bool operator==(const InternedPtr &other) const { return m_ptr == other.m_ptr; }
             bool operator!=(const InternedPtr &other) const { return m_ptr != other.m_ptr; }
