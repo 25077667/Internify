@@ -75,10 +75,7 @@ TEST(InternifyTest, Robustness)
         strings.push_back(intern.internify("robust" + std::to_string(i)));
     }
 
-    for (int i = 0; i < numStrings; ++i)
-    {
-        intern.erase("robust" + std::to_string(i));
-    }
+    strings.clear();
 
     EXPECT_EQ(intern.size(), 0);
 }
@@ -115,15 +112,7 @@ TEST(InternifyTest, ThreadSafety)
 
     EXPECT_EQ(intern.size(), numThreads * numOperations);
 
-    // Ensure no deadlock or crash
-    for (int i = 0; i < numThreads; ++i)
-    {
-        for (int j = 0; j < numOperations; ++j)
-        {
-            std::string str = "threadsafe" + std::to_string(j + i * numOperations);
-            intern.erase(str); // Directly erase instead of relying on InternedPtr release
-        }
-    }
+    internedStrings.clear();
 
     EXPECT_EQ(intern.size(), 0);
 }

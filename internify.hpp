@@ -108,12 +108,6 @@ namespace scc
             return InternedPtr(nullptr, nullptr);
         }
 
-        void erase(const T &value)
-        {
-            std::unique_lock lock(m_mutex);
-            m_interningMap.erase(hashValue(value));
-        }
-
         std::size_t size() const
         {
             std::shared_lock lock(m_mutex);
