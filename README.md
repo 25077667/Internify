@@ -5,13 +5,12 @@
 The `SCC Internify` library is a lightweight, thread-safe C++17 library designed for interning strings (or any hashable type). Interning is a technique that optimizes memory usage by ensuring that only one copy of each unique value is stored and shared across your application. This can significantly reduce memory overhead and improve performance, especially in scenarios where many identical strings or objects are used repeatedly.
 
 ## Features
-
-- **🔒 Thread-Safe Interning**: Safely intern and share objects across multiple threads without data races.
-- **⚙️ Customizable Hashing**: Easily provide your own hash function, or use the default `std::hash<T>`.
-- **🧠 Automatic Memory Management**: Interned objects are managed using `std::shared_ptr`, ensuring proper cleanup.
-- **⚡ Efficient Resource Handling**: Only a single instance of each unique object is stored, minimizing memory usage.
-- **🗜️ C++17, Single Header, Zero Dependencies**: Just include the header and you're ready to go—no external dependencies required.
-- **📜 MIT License**: Free for both personal and commercial use.
+- **🔒 Thread-Safe Interning**: Safely intern and share objects across multiple threads without data races. The `scc::Internify` class uses a combination of `std::shared_mutex` for concurrent read access and `std::unique_lock` for write access, ensuring safe multi-threaded operation.
+- **⚙️ Customizable Hashing**: Easily provide your own hash function, or use the default `std::hash<T>`. The `scc::Internify` class template allows you to specify a custom hash function through the `HashFunc` template parameter.
+- **🧠 Automatic Reference Counting**: Interned objects are automatically managed using a custom reference counting mechanism, ensuring that each object is properly cleaned up when no longer in use. No need for `std::shared_ptr`, leading to a lighter and more efficient implementation.
+- **⚡ Efficient Memory Usage**: Only a single instance of each unique object is stored, minimizing memory usage. Interning helps reduce the overhead of storing multiple identical objects, leading to better resource utilization.
+- **🗜️ C++17, Single Header, Zero Dependencies**: Just include the `internify.hpp` header, and you're ready to go—no external dependencies required. The class is implemented entirely within a header file, making it easy to integrate into existing projects.
+- **📜 MIT License**: Free for both personal and commercial use. The `scc::Internify` class is released under the MIT license, making it easy to use in both open-source and proprietary projects.
 
 ## Installation
 
