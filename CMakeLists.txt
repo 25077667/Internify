@@ -25,7 +25,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 # Include directories
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # Debug build settings
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
